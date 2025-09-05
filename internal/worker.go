@@ -26,7 +26,7 @@ func Worker(ctx context.Context, messages <-chan kafka.Message, db *sql.DB, cach
 		if err != nil {
 			log.Printf("Коммит сообщения c offset=%v не удался с ошибкой %v\n", msg.Offset, err)
 		} else {
-			log.Printf("")
+			log.Printf("Коммит сообщения c offset=%v удался\n", msg.Offset)
 		}
 	}
 }
