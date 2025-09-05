@@ -7,7 +7,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func SubscribeOnTopic(ctx context.Context, reader kafka.Reader, messages chan<- kafka.Message) {
+func SubscribeOnTopic(ctx context.Context, reader *kafka.Reader, messages chan<- kafka.Message) {
 	for {
 		msg, err := reader.ReadMessage(ctx)
 		if err != nil {

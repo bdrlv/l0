@@ -22,16 +22,18 @@ func main() {
 	connstring := os.Getenv("PG_CONNSTRING") + "?sslmode=" + os.Getenv("PG_SSLMODE")
 	db, err := internal.NewDB(connstring)
 	if err != nil {
-		log.Fatal("ошибка подключения к бд: %w. ", err)
+		log.Println(connstring)
+		log.Fatal("ошибка подключения к бд: %v. ", err)
 	}
 
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  []string{os.Getenv("KAFKA_CONN")},
-		Topic:    os.Getenv("KAFKA_TOPICNAME"),
-		GroupID:  os.Getenv("KAFKA_GROUUPID"),
-		MinBytes: 10,
-		MaxBytes: 10e6,
-		MaxWait:  1 * time.Second,
+		Brokers:        []string{os.Getenv("KAFKA_CONN")},
+		Topic:          os.Getenv("KAFKA_TOPICNAME"),
+		GroupID:        os.Getenv("KAFKA_GROUUPID"),
+		MinBytes:       10,
+		MaxBytes:       10e6,
+		MaxWait:        1 * time.Second,
+		CommitInterval: 0,
 	})
 	defer reader.Close()
 
@@ -46,10 +48,20 @@ func main() {
 		log.Println("ошибка заполнения кеша при старте: %w", err)
 	}
 
-	go internal.SubscribeOnTopic(ctx, *reader, messages)
-	go internal.Worker(ctx, messages, db, cache)
+	go internal.SubscribeOnTopic(ctx, reader, messages)
+	go internal.Worker(ctx, messages, db, cache, reader)
 
 	router := gin.Default()
+	router.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Content-Type")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(200)
+			return
+		}
+		c.Next()
+	})
 	router.GET("/order/:ouid", func(c *gin.Context) {
 		orderUID := c.Param("ouid")
 
