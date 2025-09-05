@@ -37,7 +37,7 @@ func ProcessMessage(ctx context.Context, msg kafka.Message, db *sql.DB, cache ma
 
 	log.Printf("Процессинг сообщения заказа с id == %v. ", order.OrderUID)
 
-	ok, err := validateMessageData(&order)
+	ok, err := order.ValidateMessageData()
 	if !ok {
 		if err != nil {
 			return fmt.Errorf("ошибка валидации заказа %v, %w", order.OrderUID, err)

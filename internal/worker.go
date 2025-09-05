@@ -12,6 +12,7 @@ func Worker(ctx context.Context, messages <-chan kafka.Message, db *sql.DB, cach
 	for {
 		msg, ok := <-messages
 		if !ok {
+			log.Printf("ошибка получения сообщения из канала. Topic: %v, offset: %v\n", msg.Topic, msg.Offset)
 			continue
 		}
 

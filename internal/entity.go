@@ -2,6 +2,8 @@ package internal
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
 	"time"
 )
 
@@ -93,4 +95,30 @@ type dbRow struct {
 	ItemTotalPrice    sql.NullFloat64
 	Rid               sql.NullString
 	Status            sql.NullInt64
+}
+
+func (order *Order) ValidateMessageData() (bool, error) {
+	log.Printf("Валидация заказа с id == %v", order.OrderUID)
+
+	ok, err := validateMessageDataMainBody(order)
+	if !ok {
+		return false, err
+	}
+
+	ok, err = validateMessageDataDelivery(order)
+	if !ok {
+		return false, fmt.Errorf("ошибка валидации delivery: %w", err)
+	}
+
+	ok, err = validateMessageDataPayment(order)
+	if !ok {
+		return false, fmt.Errorf("ошибка валидации payment: %w", err)
+	}
+
+	ok, err = validateMessageDataItems(order)
+	if !ok {
+		return false, fmt.Errorf("ошибка валидации items: %w", err)
+	}
+
+	return true, nil
 }

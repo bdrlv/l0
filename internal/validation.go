@@ -2,34 +2,7 @@ package internal
 
 import (
 	"fmt"
-	"log"
 )
-
-func validateMessageData(order *Order) (bool, error) {
-	log.Printf("Валидация заказа с id == %v", order.OrderUID)
-
-	ok, err := validateMessageDataMainBody(order)
-	if !ok {
-		return false, err
-	}
-
-	ok, err = validateMessageDataDelivery(order)
-	if !ok {
-		return false, fmt.Errorf("ошибка валидации delivery: %w", err)
-	}
-
-	ok, err = validateMessageDataPayment(order)
-	if !ok {
-		return false, fmt.Errorf("ошибка валидации payment: %w", err)
-	}
-
-	ok, err = validateMessageDataItems(order)
-	if !ok {
-		return false, fmt.Errorf("ошибка валидации items: %w", err)
-	}
-
-	return true, nil
-}
 
 func validateMessageDataMainBody(order *Order) (bool, error) {
 	if order.OrderUID == "" {
