@@ -15,9 +15,30 @@
 - REST API с применением Gin
 - Запуск через `docker-compose.yml`
 
+## Запуск
+### 1. Клонирование репозитория
+```
+git clone https://github.com/bdrlv/l0
+cd l0
+```
+### 2. Запуск
+```
+docker compose up -d
+```
+#### 2.1 Инициализация топика Kafka 
+```
+make topic.create.orders
+```
+#### 2.2 Инициализация таблиц PostgreSQL при первом запуске
+```
+make db.migrate.init
+```
 
 ## Дополнительные скрипты
+### Генератор сообщений с заказами
 Продюсер Kafka `producer.go` для отправки тестовых данных
 ```
 go run ./producer/producer.go
 ```
+### Web-интерфейс для получения данных о заказе по id
+Запустите в браузере `index.html` и введите номер заказа из лога `producer.go`
