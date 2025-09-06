@@ -1,6 +1,9 @@
-.PHONY: init
-init: topic.create.orders db.migrate.init
-	@echo "Kafka, PostgreSQL"
+# .PHONY: init
+# init: db.migrate.init
+# 	@echo "PostgreSQL"
+
+# init: topic.create.orders db.migrate.init
+# 	@echo "Kafka, PostgreSQL"
 
 # KAFKA
 KAFKA_CONTAINER = l0-kafka-1
