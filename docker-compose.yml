@@ -4,6 +4,10 @@
 # Создать таблицы: спроектируйте структуру для хранения полученных данных о заказах, ориентируясь на прилагаемую модель данных.
 version: '3.9'
 
+networks:
+  app-network:
+    driver: bridge
+
 services:
   db:
     image: postgres:17.6
@@ -14,6 +18,8 @@ services:
       POSTGRES_USER: l0user
       POSTGRES_PASSWORD: l0pass
       POSTGRES_DB: l0db
+    networks:
+      - app-network
 
 # Подключиться и подписаться на канал сообщений: настроить получение данных из брокера сообщений (Kafka).
   zookeeper:
@@ -21,41 +27,50 @@ services:
     restart: always
     ports:
       - "2181:2181"
+    networks:
+      - app-network
   kafka:
     image: wurstmeister/kafka
     restart: always
     ports:
-      - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_CONN: "kafka:9092"
+      KAFKA_GROUPID: "group"
+      KAFKA_PORT: 9092
+      HOSTNAME_COMMAND: "echo kafka"
     depends_on:
       - zookeeper
+    networks:
+      - app-network
+
 # Приложение
   app:
     build: .
     restart: unless-stopped
     ports:
       - "8081:8081"
-    environment:
-      KAFKA_BROKERS: kafka:9092
+    environment: 
       DB_HOST: db
-      DB_PORT: 5432
+      DB_PORT: "5432"
       DB_USER: l0user
       DB_PASSWORD: l0pass
       DB_NAME: l0db
-      KAFKA_TOPIC: orders
-      HTTP_PORT: 8081
+      PG_SSLMODE: disable
+      KAFKA_CONN: kafka:9092
+      KAFKA_TOPICNAME: orders
+      KAFKA_GROUPID: group
+      HTTP_PORT: "8081"
+      PG_CONNSTRING: postgres://l0user:l0pass@db:5432/l0db
     depends_on:
       - db
       - kafka
-    command: >
-      sh -c "
-        sleep 10 &&
-        go run /init-db.sh &&
-        ./l0
-      "
+    networks:
+      - app-network

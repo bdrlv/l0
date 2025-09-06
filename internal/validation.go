@@ -76,7 +76,7 @@ func validateMessageDataPayment(order *Order) (bool, error) {
 	if order.Payment.Currency == "" {
 		return false, fmt.Errorf("transaction пуст")
 	} else {
-		if order.Payment.Currency != "USB" && order.Payment.Currency != "RUR" {
+		if order.Payment.Currency != "USD" && order.Payment.Currency != "RUR" {
 			return false, fmt.Errorf("некорректная валюта, ожидается 'USD' или 'RUR'")
 		}
 	}

@@ -8,34 +8,39 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/segmentio/kafka-go"
 )
 
 func main() {
 	log.Println("l0 service start")
-	err := godotenv.Load()
-	if err != nil {
-		log.Printf("ошибка загрузки секретов из .env: %v", err)
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Printf("ошибка загрузки секретов из .env: %v", err)
+	// }
 
 	connstring := os.Getenv("PG_CONNSTRING") + "?sslmode=" + os.Getenv("PG_SSLMODE")
 	db, err := internal.NewDB(connstring)
 	if err != nil {
 		log.Println(connstring)
-		log.Fatal("ошибка подключения к бд: %v. ", err)
+		log.Fatal("ошибка подключения к бд: %w. ", err)
 	}
 
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:        []string{os.Getenv("KAFKA_CONN")},
 		Topic:          os.Getenv("KAFKA_TOPICNAME"),
-		GroupID:        os.Getenv("KAFKA_GROUUPID"),
+		GroupID:        os.Getenv("KAFKA_GROUPID"),
 		MinBytes:       10,
 		MaxBytes:       10e6,
 		MaxWait:        1 * time.Second,
 		CommitInterval: 0,
 	})
 	defer reader.Close()
+
+	log.Println("===")
+	log.Println(os.Getenv("KAFKA_CONN"))
+	log.Println(os.Getenv("KAFKA_TOPICNAME"))
+	log.Println(os.Getenv("KAFKA_GROUPID"))
+	log.Println("===")
 
 	ctx := context.Background()
 

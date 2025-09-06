@@ -62,7 +62,7 @@ func FillCache(ctx context.Context, db *sql.DB, cache map[string]Order) error {
 
 	for _, order := range orders {
 		cache[order.OrderUID] = order
-		fmt.Println(order)
+		fmt.Printf("Занесено в кеш из БД: %v", order)
 	}
 
 	return nil

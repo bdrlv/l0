@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Поиск заказа</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f7f9;
+      color: #333;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    #orderUid {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      padding: 12px 20px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+    .error {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .order-details {
+      display: grid;
+      gap: 12px;
+    }
+    .order-item {
+      padding: 10px;
+      background: #f9f9f9;
+      border-left: 4px solid #3498db;
+      border-radius: 4px;
+    }
+    .items-list {
+      margin-top: 10px;
+    }
+    .items-list .order-item {
+      border-color: #27ae60;
+    }
+    pre {
+      background: #eee;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Поиск заказа</h1>
+
+    <div class="search-box">
+      <input type="text" id="orderUid" placeholder="Введите order_uid" />
+      <button onclick="findOrder()">Найти заказ</button>
+    </div>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    function findOrder() {
+      const orderUid = document.getElementById("orderUid").value.trim();
+      const resultDiv = document.getElementById("result");
+
+      if (!orderUid) {
+        resultDiv.innerHTML = `<div class="error">Введите order_uid</div>`;
+        return;
+      }
+
+      resultDiv.innerHTML = `<div>Загрузка...</div>`;
+
+      fetch(`http://localhost:8081/order/${encodeURIComponent(orderUid)}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Заказ не найден");
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.order) {
+            renderOrder(data.order);
+          } else {
+            resultDiv.innerHTML = `<div class="error">Ошибка: данные заказа отсутствуют</div>`;
+          }
+        })
+        .catch(err => {
+          resultDiv.innerHTML = `<div class="error">ошибка: ${err.message}. Возможно, заказ не найден или сервис не запущен.</div>`;
+        });
+    }
+
+    function renderOrder(order) {
+      const resultDiv = document.getElementById("result");
+
+      let html = `
+        <div class="result">
+          <h2>Заказ: ${order.order_uid}</h2>
+          <div class="order-details">
+            <div class="order-item"><strong>Трек-номер:</strong> ${order.track_number}</div>
+            <div class="order-item"><strong>Entry:</strong> ${order.entry}</div>
+            <div class="order-item"><strong>Локаль:</strong> ${order.locale}</div>
+            <div class="order-item"><strong>Дата создания:</strong> ${order.date_created}</div>
+            <div class="order-item"><strong>Customer ID:</strong> ${order.customer_id}</div>
+            <div class="order-item"><strong>Delivery Service:</strong> ${order.delivery_service}</div>
+            <div class="order-item"><strong>Shardkey:</strong> ${order.shardkey}</div>
+            <div class="order-item"><strong>SM ID:</strong> ${order.sm_id}</div>
+            <div class="order-item"><strong>Oof Shard:</strong> ${order.oof_shard}</div>
+
+            <h3>Доставка</h3>
+            <div class="order-item"><strong>Имя:</strong> ${order.delivery.name}</div>
+            <div class="order-item"><strong>Телефон:</strong> ${order.delivery.phone}</div>
+            <div class="order-item"><strong>Адрес:</strong> ${order.delivery.city}, ${order.delivery.address}</div>
+            <div class="order-item"><strong>Индекс:</strong> ${order.delivery.zip}</div>
+            <div class="order-item"><strong>Email:</strong> ${order.delivery.email}</div>
+
+            <h3>Оплата</h3>
+            <div class="order-item"><strong>Транзакция:</strong> ${order.payment.transaction}</div>
+            <div class="order-item"><strong>Провайдер:</strong> ${order.payment.provider}</div>
+            <div class="order-item"><strong>Сумма:</strong> ${order.payment.amount} ${order.payment.currency}</div>
+            <div class="order-item"><strong>Банк:</strong> ${order.payment.bank}</div>
+            <div class="order-item"><strong>Стоимость доставки:</strong> ${order.payment.delivery_cost}</div>
+            <div class="order-item"><strong>Товары:</strong> ${order.payment.goods_total}</div>
+
+            <h3>Товары</h3>
+            <div class="items-list">
+      `;
+
+      order.items.forEach(item => {
+        html += `
+          <div class="order-item">
+            <strong>${item.name}</strong> (ID: ${item.chrt_id})<br>
+            Цена: ${item.price} | Скидка: ${item.sale}% | Итого: ${item.total_price}<br>
+            Артикул: ${item.nm_id} | Бренд: ${item.brand} | Статус: ${item.status}
+          </div>
+        `;
+      });
+
+      html += `
+            </div>
+          </div>
+        </div>
+      `;
+
+      resultDiv.innerHTML = html;
+    }
+  </script>
+</body>
+</html>

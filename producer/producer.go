@@ -14,7 +14,7 @@ import (
 func main() {
 	// хардкод
 	writer := &kafka.Writer{
-		Addr:     kafka.TCP("localhost:9092"),
+		Addr:     kafka.TCP("localhost:29092"),
 		Topic:    "orders",
 		Balancer: &kafka.LeastBytes{},
 	}
@@ -33,7 +33,7 @@ func main() {
 			Email   string `json:"email"`
 		}{
 			Name:    "Test Testov",
-			Phone:   "+9720000000",
+			Phone:   "+98720000000",
 			Zip:     "2639809",
 			City:    "Kiryat Mozkin",
 			Address: "Ploshad Mira 15",
@@ -52,12 +52,13 @@ func main() {
 			GoodsTotal   int    `json:"goods_total"`
 			CustomFee    int    `json:"custom_fee"`
 		}{
-			Transaction:  "b563feb7b2b84b6test",
-			RequestID:    "",
-			Currency:     "USD",
-			Provider:     "wbpay",
-			Amount:       1817,
-			PaymentDt:    1637907727,
+			Transaction: "b563feb7b2b84b6test",
+			RequestID:   "",
+			Currency:    "USD",
+			Provider:    "wbpay",
+			Amount:      1817,
+			// PaymentDt:    1637907727,
+			PaymentDt:    time.Now().Unix(),
 			Bank:         "alpha",
 			DeliveryCost: 1500,
 			GoodsTotal:   317,
